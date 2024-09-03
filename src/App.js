@@ -1,30 +1,81 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import {
+  ApolloClient,
+  InMemoryCache,
+  ApolloProvider,
+  useQuery,
+  gql,
+} from "@apollo/client";
 import Datepicker from "react-tailwindcss-datepicker";
+
+// Apollo Client setup
+const client = new ApolloClient({
+  uri: "https://ifood-availability-backend-production-ifood.svc-us3.zcloud.ws/graphql",
+  cache: new InMemoryCache(),
+});
 
 const MIN_DATE = new Date();
 MIN_DATE.setDate(MIN_DATE.getDate() + 1);
 
-// Sample GraphQL data fetching function (mocked)
-const fetchDisabledDates = () => {
-  // This function simulates fetching data from a GraphQL server
-  return [
-    {
-      startDate: "2024-12-02T00:00:00.000Z",
-      endDate: "2024-12-05T23:59:59.999Z",
-    },
-    {
-      startDate: "2024-12-11T00:00:00.000Z",
-      endDate: "2024-12-12T23:59:59.999Z",
-    },
-  ];
+// GraphQL query to fetch disabled dates
+const GET_DISABLED_DATES = gql`
+  query GetDisabledDates {
+    disabledDates {
+      startDate
+      endDate
+    }
+  }
+`;
+
+const transformDisabledDates = (graphqlDates) => {
+  return graphqlDates.map((date) => {
+    const startDate = new Date(date.startDate);
+    const endDate = new Date(date.endDate);
+
+    // Add one day to account for the timezone shift or display issue
+    startDate.setDate(startDate.getDate() + 1);
+    endDate.setDate(endDate.getDate() + 1);
+
+    return {
+      startDate,
+      endDate,
+    };
+  });
 };
 
-// Function to transform fetched dates to the required format
-const transformDisabledDates = (graphqlDates) => {
-  return graphqlDates.map((date) => ({
-    startDate: new Date(date.startDate),
-    endDate: new Date(date.endDate),
-  }));
+const FetchDisabledDates = ({ onDataFetched }) => {
+  const { loading, error, data } = useQuery(GET_DISABLED_DATES);
+
+  useEffect(() => {
+    if (!loading) {
+      if (error || !data || !data.disabledDates.length) {
+        // If there's an error or no dates are returned, use a mock date
+        const mockStartDate = new Date("2024-12-25");
+        const mockEndDate = new Date("2024-12-26");
+
+        mockStartDate.setDate(mockStartDate.getDate() + 1);
+        mockEndDate.setDate(mockEndDate.getDate() + 1);
+        const mockDates = [
+          {
+            startDate: mockStartDate,
+            endDate: mockEndDate,
+          },
+        ];
+        console.warn(
+          "Using mock dates due to error or no data from server:",
+          error
+        );
+        onDataFetched(mockDates);
+      } else {
+        const transformedDates = transformDisabledDates(data.disabledDates);
+        onDataFetched(transformedDates);
+      }
+    }
+  }, [loading, error, data, onDataFetched]);
+
+  if (loading) return <p>Loading...</p>;
+
+  return null;
 };
 
 const App = () => {
@@ -50,18 +101,9 @@ const App = () => {
     }
   }, []);
 
-  useEffect(() => {
-    // Fetch and transform the dates from the GraphQL server
-    const datesFromServer = fetchDisabledDates();
-    const transformedDates = transformDisabledDates(datesFromServer);
-    setDisabledDates(transformedDates);
-  }, []);
-
-  // Function to handle the change in datepicker and create a JSON object with Unix time
   const handleDateChange = (newValue) => {
     setValue(newValue);
 
-    // Convert dates to Unix time (seconds since Jan 1, 1970)
     const startDateUnix = newValue.startDate
       ? Math.floor(new Date(newValue.startDate).getTime() / 1000)
       : null;
@@ -69,7 +111,6 @@ const App = () => {
       ? Math.floor(new Date(newValue.endDate).getTime() / 1000)
       : null;
 
-    // Create JSON object using the Unix timestamps
     const dateObject = {
       startDate: startDateUnix,
       endDate: endDateUnix,
@@ -77,19 +118,21 @@ const App = () => {
       endDateRaw: newValue.endDate,
     };
 
-    // Log the JSON object to the console or use it further in your application
     console.log("Selected Dates JSON:", JSON.stringify(dateObject, null, 2));
   };
 
   return (
-    <Datepicker
-      displayFormat="DD/MM/YYYY"
-      disabledDates={disabledDates}
-      primaryColor={"red"}
-      minDate={MIN_DATE}
-      value={value}
-      onChange={handleDateChange}
-    />
+    <ApolloProvider client={client}>
+      <FetchDisabledDates onDataFetched={setDisabledDates} />
+      <Datepicker
+        displayFormat="DD/MM/YYYY"
+        disabledDates={disabledDates}
+        primaryColor={"red"}
+        minDate={MIN_DATE}
+        value={value}
+        onChange={handleDateChange}
+      />
+    </ApolloProvider>
   );
 };
 
