@@ -1,0 +1,29 @@
+{
+  "GetReserveData": {
+    "basePrice": 15000,
+    "disableWeekends": false,
+    "daysNearSpecialDatesArePricy": true,
+    "pricyDaysValue": 17000,
+    "pricyDaysGap": 2,
+    "specialPricesPerDate": [
+      {
+        "holidayGroup": {
+          "startDate": "2024-12-05",
+          "endDate": "2024-12-10",
+          "price": 20000
+        },
+        "specialWeekXYZGroup": {
+          "startDate": "2024-11-30",
+          "endDate": "2024-12-10",
+          "price": 10000
+        }
+      }
+    ],
+    "disabledDates": [
+      "2024-12-01",
+      "2024-12-02",
+      "2024-12-03",
+      "2024-12-04"
+    ]
+  }
+}

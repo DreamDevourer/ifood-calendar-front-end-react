@@ -1,0 +1,15 @@
+{
+  "block-1": {
+    "startDate": "2024-12-02",
+    "endDate": "2024-12-04",
+    "blockName": "Campanha Reserva",
+    "blockId": 123456789,
+    "blockContent": {
+      "productInfo": "Banner/Carrousel",
+      "verticalInfo": "Mercado",
+      "locationInfo": "Home",
+      "unityInfo": "Multiplos",
+      "days": 3
+    }
+  }
+}
