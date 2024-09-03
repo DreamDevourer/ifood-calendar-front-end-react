@@ -125,11 +125,19 @@ const App = () => {
     <ApolloProvider client={client}>
       <FetchDisabledDates onDataFetched={setDisabledDates} />
       <Datepicker
+        inputId="datepicker"
+        inputName="datepicker"
+        required={true}
+        i18n={"pt-br"}
+        placeholder="Selecione a reserva"
+        separator="até"
+        startWeekOn="sun"
         displayFormat="DD/MM/YYYY"
         disabledDates={disabledDates}
         primaryColor={"red"}
         minDate={MIN_DATE}
         value={value}
+        showShortcuts={false}
         onChange={handleDateChange}
       />
     </ApolloProvider>
