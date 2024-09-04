@@ -1,5 +1,8 @@
 {
   "GetReserveData": {
+    "companyName": "Coca Cola FEMSA",
+    "companyID": "123456789",
+    "companyCPNJ": "01.234.567/0001-89",
     "basePrice": 15000,
     "disableWeekends": false,
     "daysNearSpecialDatesArePricy": true,

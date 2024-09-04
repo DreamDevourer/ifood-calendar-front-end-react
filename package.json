@@ -10,6 +10,7 @@
     "dayjs": "^1.11.6",
     "graphql": "^16.9.0",
     "react": "^18.2.0",
+    "react-big-calendar": "^1.13.4",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
     "react-tailwindcss-datepicker": "^1.7.2",

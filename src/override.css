@@ -1,0 +1,23 @@
+.rbc-event,
+.rbc-day-slot .rbc-background-event {
+  --tw-bg-opacity: 1;
+  background-color: rgb(239 68 68 / var(--tw-bg-opacity)) !important;
+}
+
+.rbc-today {
+  background-color: #ffeaea;
+}
+
+/* .rbc-toolbar .rbc-btn-group:first-child {
+  display: none;
+} */
+
+/* .rbc-toolbar-label {
+  text-align: left !important;
+  padding: 0 !important;
+} */
+
+#datepicker {
+  --tw-border-opacity: 1;
+  border-color: rgb(239 68 68 / var(--tw-border-opacity));
+}

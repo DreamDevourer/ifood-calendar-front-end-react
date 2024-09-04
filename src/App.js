@@ -6,6 +6,10 @@ import {
   useQuery,
   gql,
 } from "@apollo/client";
+import moment from "moment";
+import { Calendar, Views, momentLocalizer } from "react-big-calendar";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "./override.css";
 import Datepicker from "react-tailwindcss-datepicker";
 
 // Apollo Client setup
@@ -35,18 +39,20 @@ const GET_RESERVE_DATA = gql`
   }
 `;
 
+const localizer = momentLocalizer(moment);
+
 const transformDisabledDates = (graphqlDates) => {
   return graphqlDates.map((date) => {
     const startDate = new Date(date.startDate);
     const endDate = new Date(date.endDate);
 
-    // Add one day to account for the timezone shift or display issue
     startDate.setDate(startDate.getDate() + 1);
     endDate.setDate(endDate.getDate() + 1);
 
     return {
-      startDate,
-      endDate,
+      start: startDate,
+      end: endDate,
+      title: "Unavailable",
     };
   });
 };
@@ -55,29 +61,12 @@ const FetchDisabledDates = ({ onDataFetched }) => {
   const { loading, error, data } = useQuery(GET_RESERVE_DATA);
 
   useEffect(() => {
-    if (!loading) {
-      if (error || !data || !data.disabledDates.length) {
-        // If there's an error or no dates are returned, use a mock date
-        const mockStartDate = new Date("2024-12-25");
-        const mockEndDate = new Date("2024-12-26");
-
-        mockStartDate.setDate(mockStartDate.getDate() + 1);
-        mockEndDate.setDate(mockEndDate.getDate() + 1);
-        const mockDates = [
-          {
-            startDate: mockStartDate,
-            endDate: mockEndDate,
-          },
-        ];
-        console.warn(
-          "Using mock dates due to error or no data from server:",
-          error
-        );
-        onDataFetched(mockDates);
-      } else {
-        const transformedDates = transformDisabledDates(data.disabledDates);
-        onDataFetched(transformedDates);
-      }
+    if (!loading && data) {
+      const transformedDates = transformDisabledDates(data.disabledDates);
+      onDataFetched(transformedDates);
+    }
+    if (error) {
+      console.warn("Error fetching data:", error);
     }
   }, [loading, error, data, onDataFetched]);
 
@@ -113,7 +102,7 @@ const App = () => {
     endDate: null,
   });
 
-  const [disabledDates, setDisabledDates] = useState([]);
+  const [events, setEvents] = useState([]);
   const [dropdownState, setDropdownState] = useState({
     product: false,
     vertical: false,
@@ -127,12 +116,11 @@ const App = () => {
   });
 
   const [days, setDays] = useState(0);
-  const [baseDayPrice, setDayPrice] = useState(0);
+  const [editingEvent, setEditingEvent] = useState(null); // Holds the currently selected event for editing
 
-  // Edit dropdowns option
   const productOptions = ["Banner/Outdoor", "Banner/Carrousel"];
-  const verticalOptions = ["Mercado", "Tecnologia"];
-  const locationOptions = ["Home", "Categoria"];
+  const verticalOptions = ["Mercado", "Refeição"];
+  const locationOptions = ["Home", "Subpagina"];
 
   useEffect(() => {
     const targetElement = document.querySelector(
@@ -150,28 +138,64 @@ const App = () => {
   const handleDateChange = (newValue) => {
     setValue(newValue);
 
-    const startDateUnix = newValue.startDate
-      ? Math.floor(new Date(newValue.startDate).getTime() / 1000)
-      : null;
-    const endDateUnix = newValue.endDate
-      ? Math.floor(new Date(newValue.endDate).getTime() / 1000)
-      : null;
-
-    // calculate days from newValue.startDate to newValue.endDate and output an int.
     const days =
       (newValue.endDate - newValue.startDate) / (1000 * 60 * 60 * 24) + 1;
 
     setDays(days); // Update the days state
+  };
 
-    const dateObject = {
-      startDate: startDateUnix,
-      endDate: endDateUnix,
-      startDateRaw: newValue.startDate,
-      endDateRaw: newValue.endDate,
-      rangeDays: days,
-    };
+  const handleConfirmReservation = () => {
+    if (value.startDate && value.endDate) {
+      const newEvent = {
+        title: `Campanha ${selectedValues.product}`,
+        start: new Date(value.startDate),
+        end: new Date(value.endDate),
+      };
 
-    console.log("Selected Dates JSON:", JSON.stringify(dateObject, null, 2));
+      // Check if we're editing an existing event
+      if (editingEvent) {
+        setEvents((prevEvents) =>
+          prevEvents.map((event) => (event === editingEvent ? newEvent : event))
+        );
+        setEditingEvent(null); // Clear the editing state
+      } else {
+        setEvents((prevEvents) => [...prevEvents, newEvent]);
+      }
+    }
+  };
+
+  const handleEventClick = (event) => {
+    // Load the selected event details into the form for editing
+    setValue({
+      startDate: event.start,
+      endDate: event.end,
+    });
+    setSelectedValues({
+      product: event.title.split("Campanha ")[1], // Extract the product name
+      vertical: "Mercado", // Set default for now, will be extended
+      location: "Home", // Set default for now, will be extended
+    });
+
+    const days = (event.end - event.start) / (1000 * 60 * 60 * 24) + 1;
+    setDays(days); // Update the days state based on the selected event
+
+    setEditingEvent(event); // Set the selected event for editing
+  };
+
+  const handleSlotSelect = () => {
+    // Unselect the current event and reset the form to create a new reservation
+    setValue({ startDate: null, endDate: null });
+    setSelectedValues({
+      product: "Banner/Carrousel",
+      vertical: "Mercado",
+      location: "Home",
+    });
+    setDays(0);
+    setEditingEvent(null); // Clear the editing state to allow creating a new event
+  };
+
+  const handleFetchedDisabledDates = (fetchedEvents) => {
+    setEvents((prevEvents) => [...prevEvents, ...fetchedEvents]);
   };
 
   const toggleDropdown = (field) => {
@@ -198,7 +222,7 @@ const App = () => {
 
   return (
     <ApolloProvider client={client}>
-      <FetchDisabledDates onDataFetched={setDisabledDates} />
+      <FetchDisabledDates onDataFetched={handleFetchedDisabledDates} />
       <div className="container mx-auto p-4 relative">
         <Datepicker
           useRange={false}
@@ -210,13 +234,33 @@ const App = () => {
           separator="até"
           startWeekOn="sun"
           displayFormat="DD/MM/YYYY"
-          disabledDates={disabledDates}
           primaryColor={"red"}
           minDate={MIN_DATE}
           value={value}
           showShortcuts={false}
           onChange={handleDateChange}
         />
+
+        {/* React Big Calendar & Picker Area */}
+        <div className="my-8">
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: 500 }}
+            defaultView={Views.MONTH}
+            views={[Views.MONTH, Views.WEEK, Views.AGENDA]}
+            onSelectEvent={handleEventClick} // Handle event click (in this case the select event)
+            onSelectSlot={handleSlotSelect} // Unselect and reset form when clicking outside of an event
+            selectable={true}
+            toolbar={true}
+            // titleAccessor="Calendário de reservas"
+            allDayAccessor={true}
+          />
+        </div>
+
+        {/* Main Reserve Details Area */}
         <div className="reservation-details mt-6 relative">
           <div className="grid grid-cols-2 gap-4">
             <div className="relative">
@@ -225,7 +269,7 @@ const App = () => {
                 <span className="font-normal">{selectedValues.product}</span>{" "}
                 <a
                   href="#"
-                  className="text-blue-600"
+                  className="text-red-600"
                   id="editProduct"
                   onClick={() => toggleDropdown("product")}
                 >
@@ -247,7 +291,7 @@ const App = () => {
                 <span className="font-normal">{selectedValues.vertical}</span>{" "}
                 <a
                   href="#"
-                  className="text-blue-600"
+                  className="text-red-600"
                   id="editVertical"
                   onClick={() => toggleDropdown("vertical")}
                 >
@@ -269,7 +313,7 @@ const App = () => {
                 <span className="font-normal">{selectedValues.location}</span>{" "}
                 <a
                   href="#"
-                  className="text-blue-600"
+                  className="text-red-600"
                   id="editLocation"
                   onClick={() => toggleDropdown("location")}
                 >
@@ -287,9 +331,6 @@ const App = () => {
             </div>
             <div className="bg-gray-100 p-4 border border-gray-300">
               <p className="font-bold text-teal-600">Tipo Mensal:</p>
-              <p className="font-bold">
-                {/* Unitário: <span className="text-orange-600">Multiplos</span> */}
-              </p>
               <p className="font-bold">
                 Dias:{" "}
                 <span className="font-normal" id="daysOutput">
@@ -319,15 +360,12 @@ const App = () => {
               placeholder="Escreva uma descrição..."
             ></textarea>
           </div>
-          <div className="mt-4">
-            {/* <p className="text-red-600 font-bold">Importante:</p> */}
-            {/* <p className="text-red-600">
-              Sua reserva será mantida por até XX horas.
-            </p> */}
-          </div>
           <div className="mt-6">
-            <button className="bg-blue-600 text-white font-bold py-2 px-4 rounded">
-              Confirmar reserva
+            <button
+              className="bg-red-600 text-white font-bold py-2 px-4 rounded"
+              onClick={handleConfirmReservation}
+            >
+              {editingEvent ? "Atualizar reserva" : "Confirmar reserva"}
             </button>
           </div>
         </div>
