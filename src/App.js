@@ -262,73 +262,76 @@ const App = () => {
 
         {/* Main Reserve Details Area */}
         <div className="reservation-details mt-6 relative">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="relative">
-              <p className="font-bold">
-                Produto:{" "}
-                <span className="font-normal">{selectedValues.product}</span>{" "}
-                <a
-                  href="#"
-                  className="text-red-600"
-                  id="editProduct"
-                  onClick={() => toggleDropdown("product")}
-                >
-                  Editar
-                </a>
-              </p>
-              <Dropdown
-                options={productOptions}
-                isOpen={dropdownState.product}
-                onSelect={(option) => {
-                  handleSelect("product", option);
-                }}
-                closeDropdown={closeDropdown}
-              />
+          <div className="grid grid-rows-1 grid-flow-col gap-4">
+            <div>
+              <div className="relative">
+                <p className="font-bold">
+                  Produto:{" "}
+                  <span className="font-normal">{selectedValues.product}</span>{" "}
+                  <a
+                    href="#"
+                    className="text-red-600"
+                    id="editProduct"
+                    onClick={() => toggleDropdown("product")}
+                  >
+                    Editar
+                  </a>
+                </p>
+                <Dropdown
+                  options={productOptions}
+                  isOpen={dropdownState.product}
+                  onSelect={(option) => {
+                    handleSelect("product", option);
+                  }}
+                  closeDropdown={closeDropdown}
+                />
+              </div>
+              <div className="relative">
+                <p className="font-bold">
+                  Vertical:{" "}
+                  <span className="font-normal">{selectedValues.vertical}</span>{" "}
+                  <a
+                    href="#"
+                    className="text-red-600"
+                    id="editVertical"
+                    onClick={() => toggleDropdown("vertical")}
+                  >
+                    Editar
+                  </a>
+                </p>
+                <Dropdown
+                  options={verticalOptions}
+                  isOpen={dropdownState.vertical}
+                  onSelect={(option) => {
+                    handleSelect("vertical", option);
+                  }}
+                  closeDropdown={closeDropdown}
+                />
+              </div>
+              <div className="relative">
+                <p className="font-bold">
+                  Local:{" "}
+                  <span className="font-normal">{selectedValues.location}</span>{" "}
+                  <a
+                    href="#"
+                    className="text-red-600"
+                    id="editLocation"
+                    onClick={() => toggleDropdown("location")}
+                  >
+                    Editar
+                  </a>
+                </p>
+                <Dropdown
+                  options={locationOptions}
+                  isOpen={dropdownState.location}
+                  onSelect={(option) => {
+                    handleSelect("location", option);
+                  }}
+                  closeDropdown={closeDropdown}
+                />
+              </div>
             </div>
-            <div className="relative">
-              <p className="font-bold">
-                Vertical:{" "}
-                <span className="font-normal">{selectedValues.vertical}</span>{" "}
-                <a
-                  href="#"
-                  className="text-red-600"
-                  id="editVertical"
-                  onClick={() => toggleDropdown("vertical")}
-                >
-                  Editar
-                </a>
-              </p>
-              <Dropdown
-                options={verticalOptions}
-                isOpen={dropdownState.vertical}
-                onSelect={(option) => {
-                  handleSelect("vertical", option);
-                }}
-                closeDropdown={closeDropdown}
-              />
-            </div>
-            <div className="relative">
-              <p className="font-bold">
-                Local:{" "}
-                <span className="font-normal">{selectedValues.location}</span>{" "}
-                <a
-                  href="#"
-                  className="text-red-600"
-                  id="editLocation"
-                  onClick={() => toggleDropdown("location")}
-                >
-                  Editar
-                </a>
-              </p>
-              <Dropdown
-                options={locationOptions}
-                isOpen={dropdownState.location}
-                onSelect={(option) => {
-                  handleSelect("location", option);
-                }}
-                closeDropdown={closeDropdown}
-              />
-            </div>
+
             <div className="bg-gray-100 p-4 border border-gray-300">
               <p className="font-bold text-teal-600">Tipo Mensal:</p>
               <p className="font-bold">
