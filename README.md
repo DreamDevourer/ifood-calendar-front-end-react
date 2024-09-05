@@ -2,6 +2,8 @@
 
 To test the project locally, run:
 
+<img src="./Calendar.jpeg" alt="project calendar main area">
+
 ### `npm install && npm start`
 
 ### Deployment
